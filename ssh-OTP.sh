@@ -25,9 +25,6 @@ function ctrl_c() {
         logout
 }
 
-
-SMS_SERVER="+33695000695"
-SMS_TERMINAL="/dev/ttyUSB0"
 SMS_DEFAULT_DEST=""
 if [ -n "$SSH_CLIENT" ]; then
 	CHALENGE_PASSWORD=`awk -v min=1 -v max=10000 'BEGIN{srand(); print int(min+rand()*(max-min+1))}'`
@@ -38,14 +35,7 @@ if [ -n "$SSH_CLIENT" ]; then
 		SMS_DEST=$SMS_DEFAULT_DEST
 	fi
 	if [[ -n "$SMS_DEST" ]] ; then
-		stty -F $SMS_TERMINAL 115200
-		echo -e "ATZ\r" >$SMS_TERMINAL # we need echo parameter -e for interpretation of backslash escapes
-		echo -e "AT+CSCA=\"$SMS_SERVER\",145" >$SMS_TERMINAL
-		echo -e "AT+CMGF=1\r" >$SMS_TERMINAL
-		echo -e "AT+CMGS=\"$SMS_DEST\"" >$SMS_TERMINAL # change 123456789 with SMS destination number
-		echo -e "Two Factor password for ssh $USER : $CHALENGE_PASSWORD\x1A" >$SMS_TERMINAL # message must be ending with \x1A (ASCII for CTRL+Z)
-		echo -e "\x1A\r" >$SMS_TERMINAL
-		echo -e "\x1A\r" >$SMS_TERMINAL
+		echo "$CHALENGE_PASSWORD : Two Factor password for ssh $USER" | gammu --sendsms TEXT $SMS_DEST > /dev/null
 		echo "Two-Factor password send to mobile"
 	else
 	echo "Two-Factor Password : $CHALENGE_PASSWORD"
